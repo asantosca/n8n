@@ -1,0 +1,189 @@
+{
+  "name": "Check Gmail mark read if not English",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        0
+      ],
+      "id": "a79d0e9b-d5a5-4234-980a-6ef263fe7b48",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "your credentials here",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:1234/v1/chat/completions",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messages",
+              "value": "=[     {\"role\": \"system\", \"content\": \"In one word, is the following text written in English?\"},     {\"role\": \"user\", \"content\": \"{{ $json.Subject.replace(/\"/g, \"\") }}\"}] "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ],
+      "id": "5537c24e-e1ed-43a2-b2d0-9a126eca6b62",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        260,
+        0
+      ],
+      "id": "49d8e22c-342e-43d7-9439-5e3141591106",
+      "name": "Gmail",
+      "webhookId": "62b209a2-c021-4fb7-a89c-9800563f7fe8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Your credentials here",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "93e64ab6-bbe3-4cf5-bdfe-758df89b393d",
+              "leftValue": "={{ $json.choices[0].message.content }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        0
+      ],
+      "id": "e38d3991-6009-48f3-ad65-2150d103ee90",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Gmail').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        20
+      ],
+      "id": "2fa8a6fe-a9c2-48aa-80f0-1c7f5f443b65",
+      "name": "Gmail1",
+      "webhookId": "63c4cf59-0aa1-4e8f-92ca-b7649f478b5a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Your Credentials here",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "320a0298-fd26-419c-a41d-56eaf769173a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "509a70318beab1ae7edf5bbcc6c0518261f3fa9ce9ec5965ac31f3f51434a726"
+  },
+  "id": "Q3K1NMvJnM9KvqYL",
+  "tags": []
+}
